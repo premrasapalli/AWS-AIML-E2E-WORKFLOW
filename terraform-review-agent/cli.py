@@ -53,7 +53,18 @@ def review(repo: str, model: str, output: str):
     terrascan_findings = scanner.scan(repo)
 
     console.print("[yellow]Running AI analysis...[/yellow]")
-    ai_analysis = analyzer.analyze_changes(changes, terrascan_findings)
+    try:
+        ai_analysis = analyzer.analyze_changes(changes, terrascan_findings)
+    except Exception as e:
+        console.print(f"[red]AI analysis unavailable: {e}[/red]")
+        from app.models import AIAnalysis, RiskLevel
+        ai_analysis = AIAnalysis(
+            summary="AI analysis unavailable - configure AWS credentials for Bedrock access",
+            risk_score=50,
+            risk_level=RiskLevel.MEDIUM,
+            findings=terrascan_findings,
+            recommendations=["Configure AWS credentials: aws configure", "Enable Amazon Titan in Bedrock console"],
+        )
 
     if output == "json":
         result = {

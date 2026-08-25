@@ -52,16 +52,28 @@ def debug(namespace: str, pod: str, label: str, container: str, tail: int, model
     logs = log_collector.get_logs(namespace, pod, container, tail)
 
     console.print("[yellow]Running AI diagnosis...[/yellow]")
-    diagnoser = BedrockDiagnoser(model_alias=model)
-    from app.models import ContainerStatus
-    analysis = diagnoser.diagnose(
-        pod_name=pod,
-        namespace=namespace,
-        phase="Failed",
-        container_statuses=[],
-        events=events,
-        logs=logs,
-    )
+    try:
+        diagnoser = BedrockDiagnoser(model_alias=model)
+        from app.models import ContainerStatus
+        analysis = diagnoser.diagnose(
+            pod_name=pod,
+            namespace=namespace,
+            phase="Failed",
+            container_statuses=[],
+            events=events,
+            logs=logs,
+        )
+    except Exception as e:
+        console.print(f"[red]AI diagnosis unavailable: {e}[/red]")
+        from app.models import RootCauseAnalysis
+        analysis = RootCauseAnalysis(
+            root_cause="AI diagnosis unavailable - configure AWS credentials for Bedrock access",
+            category="Configuration",
+            confidence=0,
+            explanation="Configure AWS credentials and enable Amazon Titan in Bedrock",
+            suggested_fixes=["Run: aws configure", "Enable Amazon Titan in AWS Console > Bedrock"],
+            related_events=[],
+        )
 
     if output == "json":
         result = {

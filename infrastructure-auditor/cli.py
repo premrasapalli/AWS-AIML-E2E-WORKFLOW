@@ -51,9 +51,12 @@ def scan(path: str, scan_type: str, model: str, no_ai: bool, output: str):
     ai_explanations = []
     if not no_ai and all_issues:
         console.print("[yellow]Generating AI explanations...[/yellow]")
-        explainer = BedrockExplainer(model_alias=model)
-        for issue in all_issues[:10]:
-            ai_explanations.append(explainer.explain_issue(issue))
+        try:
+            explainer = BedrockExplainer(model_alias=model)
+            for issue in all_issues[:10]:
+                ai_explanations.append(explainer.explain_issue(issue))
+        except Exception as e:
+            console.print(f"[red]AI explanations unavailable: {e}[/red]")
 
     if output == "json":
         result = {
