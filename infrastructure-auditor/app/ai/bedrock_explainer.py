@@ -7,7 +7,7 @@ from ..models import SecurityIssue, AIExplanation
 
 
 class BedrockExplainer:
-    def __init__(self, model_alias: str = "titan-express"):
+    def __init__(self, model_alias: str = "ollama"):
         self.client = BedrockClient(model_alias=model_alias)
 
     def explain_issue(self, issue: SecurityIssue) -> AIExplanation:

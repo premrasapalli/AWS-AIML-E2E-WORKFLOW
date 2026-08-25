@@ -49,7 +49,7 @@ class AuditResult(BaseModel):
 class AuditRequest(BaseModel):
     path: str
     file_type: Optional[FileType] = None
-    model_alias: str = "titan-express"
+    model_alias: str = "ollama"
     include_ai_explanations: bool = True
 
 

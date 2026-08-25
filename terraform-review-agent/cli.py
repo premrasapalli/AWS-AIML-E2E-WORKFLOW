@@ -22,7 +22,7 @@ def cli():
 
 @cli.command()
 @click.option("--repo", required=True, help="Path to Terraform repository")
-@click.option("--model", default="titan-express", help="Bedrock model alias")
+@click.option("--model", default="ollama", help="Model alias (ollama, ollama-llama3, nova-lite, etc)")
 @click.option("--output", type=click.Choice(["table", "json"]), default="table")
 def review(repo: str, model: str, output: str):
     """Review Terraform code for security issues and best practices."""

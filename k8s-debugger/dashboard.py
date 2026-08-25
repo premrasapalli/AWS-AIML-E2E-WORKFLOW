@@ -20,7 +20,7 @@ with col1:
     tail_lines = st.slider("Log Lines to Fetch", 50, 500, 100)
 
 with col2:
-    model_alias = st.selectbox("AI Model", ["titan-express", "titan-lite", "titan-premier"])
+    model_alias = st.selectbox("AI Model", ["ollama", "ollama-llama3", "ollama-mistral", "ollama-qwen", "nova-lite", "nova-pro"])
     if st.button("Debug Pod", type="primary"):
         if namespace and (pod_name or label_selector):
             with st.spinner("Fetching pod data and running AI diagnosis..."):

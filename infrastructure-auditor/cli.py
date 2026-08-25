@@ -24,7 +24,7 @@ def cli():
 @cli.command()
 @click.option("--path", required=True, help="Path to scan")
 @click.option("--type", "scan_type", type=click.Choice(["k8s", "docker", "terraform", "all"]), default="all")
-@click.option("--model", default="titan-express", help="Bedrock model alias")
+@click.option("--model", default="ollama", help="Model alias (ollama, ollama-llama3, nova-lite, etc)")
 @click.option("--no-ai", is_flag=True, help="Disable AI explanations")
 @click.option("--output", type=click.Choice(["table", "json"]), default="table")
 def scan(path: str, scan_type: str, model: str, no_ai: bool, output: str):

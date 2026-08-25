@@ -8,7 +8,7 @@ from ..models import TerraformChange, SecurityFinding, AIAnalysis, RiskLevel
 
 
 class BedrockAnalyzer:
-    def __init__(self, model_alias: str = "titan-express"):
+    def __init__(self, model_alias: str = "ollama"):
         self.client = BedrockClient(model_alias=model_alias)
 
     def analyze_changes(

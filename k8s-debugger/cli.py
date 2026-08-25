@@ -26,7 +26,7 @@ def cli():
 @click.option("--label", "-l", help="Label selector (e.g., app=nginx)")
 @click.option("--container", "-c", help="Container name")
 @click.option("--tail", default=100, help="Number of log lines to fetch")
-@click.option("--model", default="titan-express", help="Bedrock model alias")
+@click.option("--model", default="ollama", help="Model alias (ollama, ollama-llama3, nova-lite, etc)")
 @click.option("--output", type=click.Choice(["table", "json"]), default="table")
 def debug(namespace: str, pod: str, label: str, container: str, tail: int, model: str, output: str):
     """Debug a failing Kubernetes pod."""

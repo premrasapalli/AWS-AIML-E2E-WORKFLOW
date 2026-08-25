@@ -51,7 +51,7 @@ class DebugRequest(BaseModel):
     label_selector: Optional[str] = None
     container: Optional[str] = None
     tail_lines: int = 100
-    model_alias: str = "titan-express"
+    model_alias: str = "ollama"
 
 
 class DebugResponse(BaseModel):

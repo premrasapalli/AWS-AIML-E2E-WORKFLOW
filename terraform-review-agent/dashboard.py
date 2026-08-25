@@ -15,7 +15,7 @@ col1, col2 = st.columns([2, 1])
 
 with col1:
     repo_path = st.text_input("Repository Path", placeholder="/path/to/terraform/repo")
-    model_alias = st.selectbox("AI Model", ["titan-express", "titan-lite", "titan-premier"])
+    model_alias = st.selectbox("AI Model", ["ollama", "ollama-llama3", "ollama-mistral", "ollama-qwen", "nova-lite", "nova-pro"])
 
 with col2:
     st.markdown("### Quick Actions")

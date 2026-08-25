@@ -40,7 +40,7 @@ class ReviewRequest(BaseModel):
     repo_path: str
     pr_number: Optional[int] = None
     branch: Optional[str] = None
-    model_alias: str = "titan-express"
+    model_alias: str = "ollama"
 
 
 class ReviewResponse(BaseModel):

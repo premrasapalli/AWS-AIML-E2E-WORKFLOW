@@ -15,7 +15,7 @@ col1, col2 = st.columns([2, 1])
 with col1:
     scan_path = st.text_input("Path to Scan", placeholder="/path/to/infrastructure/code")
     scan_type = st.selectbox("Scan Type", ["all", "kubernetes", "docker_compose", "terraform"])
-    model_alias = st.selectbox("AI Model", ["titan-express", "titan-lite", "titan-premier"])
+    model_alias = st.selectbox("AI Model", ["ollama", "ollama-llama3", "ollama-mistral", "ollama-qwen", "nova-lite", "nova-pro"])
 
 with col2:
     include_ai = st.checkbox("Include AI Explanations", value=True)
