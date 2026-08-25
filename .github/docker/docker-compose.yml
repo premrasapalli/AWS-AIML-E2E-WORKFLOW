@@ -1,0 +1,30 @@
+services:
+  terraform-review-agent:
+    build:
+      context: ..
+      dockerfile: .github/docker/Dockerfile.terraform-review-agent
+    ports:
+      - "8001:8001"
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    restart: unless-stopped
+
+  infrastructure-auditor:
+    build:
+      context: ..
+      dockerfile: .github/docker/Dockerfile.infrastructure-auditor
+    ports:
+      - "8002:8002"
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    restart: unless-stopped
+
+  k8s-debugger:
+    build:
+      context: ..
+      dockerfile: .github/docker/Dockerfile.k8s-debugger
+    ports:
+      - "8003:8003"
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    restart: unless-stopped

@@ -1,0 +1,19 @@
+FROM python:3.14-slim AS base
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl kubectl && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY shared/ /app/shared/
+COPY terraform-review-agent/requirements.txt /app/terraform-review-agent/requirements.txt
+RUN pip install --no-cache-dir -r /app/terraform-review-agent/requirements.txt
+
+COPY terraform-review-agent/ /app/terraform-review-agent/
+
+WORKDIR /app/terraform-review-agent
+
+EXPOSE 8001
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]

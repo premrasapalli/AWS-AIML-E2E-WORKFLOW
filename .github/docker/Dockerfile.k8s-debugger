@@ -1,0 +1,19 @@
+FROM python:3.14-slim AS base
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl kubectl && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY shared/ /app/shared/
+COPY k8s-debugger/requirements.txt /app/k8s-debugger/requirements.txt
+RUN pip install --no-cache-dir -r /app/k8s-debugger/requirements.txt
+
+COPY k8s-debugger/ /app/k8s-debugger/
+
+WORKDIR /app/k8s-debugger
+
+EXPOSE 8003
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8003"]

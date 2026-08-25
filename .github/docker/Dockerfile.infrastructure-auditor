@@ -1,0 +1,19 @@
+FROM python:3.14-slim AS base
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY shared/ /app/shared/
+COPY infrastructure-auditor/requirements.txt /app/infrastructure-auditor/requirements.txt
+RUN pip install --no-cache-dir -r /app/infrastructure-auditor/requirements.txt
+
+COPY infrastructure-auditor/ /app/infrastructure-auditor/
+
+WORKDIR /app/infrastructure-auditor
+
+EXPOSE 8002
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002"]
