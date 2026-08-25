@@ -69,9 +69,9 @@ Format your response as JSON:
             events_text += f"- [{e.type}] {e.reason}: {e.message[:150]}\n"
 
         logs_text = ""
-        for l in logs[:3]:
-            log_lines = l.logs.strip().split("\n")[-20:]
-            logs_text += f"\nContainer {l.container} logs (last 20 lines):\n"
+        for log_entry in logs[:3]:
+            log_lines = log_entry.logs.strip().split("\n")[-20:]
+            logs_text += f"\nContainer {log_entry.container} logs (last 20 lines):\n"
             logs_text += "\n".join(log_lines) + "\n"
 
         return f"""Analyze this failing Kubernetes pod:

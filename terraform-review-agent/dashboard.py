@@ -4,7 +4,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import streamlit as st
 import requests
-import json
 
 st.set_page_config(page_title="AI Terraform Review Agent", page_icon="🔍", layout="wide")
 

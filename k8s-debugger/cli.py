@@ -54,7 +54,6 @@ def debug(namespace: str, pod: str, label: str, container: str, tail: int, model
     console.print("[yellow]Running AI diagnosis...[/yellow]")
     try:
         diagnoser = BedrockDiagnoser(model_alias=model)
-        from app.models import ContainerStatus
         analysis = diagnoser.diagnose(
             pod_name=pod,
             namespace=namespace,
@@ -80,7 +79,7 @@ def debug(namespace: str, pod: str, label: str, container: str, tail: int, model
             "pod": pod,
             "namespace": namespace,
             "events": [e.model_dump() for e in events],
-            "logs": [l.model_dump() for l in logs],
+            "logs": [log_entry.model_dump() for log_entry in logs],
             "analysis": analysis.model_dump(),
             "model_used": model,
         }
@@ -123,8 +122,8 @@ def display_results(pod, namespace, events, logs, analysis, model):
             events_table.add_row(e.type, e.reason, e.message[:60], e.age)
         console.print(events_table)
 
-    for l in logs:
-        console.print(Panel(l.logs[-2000:] if len(l.logs) > 2000 else l.logs, title=f"Logs ({l.container})"))
+    for log_entry in logs:
+        console.print(Panel(log_entry.logs[-2000:] if len(log_entry.logs) > 2000 else log_entry.logs, title=f"Logs ({log_entry.container})"))
 
     if analysis:
         confidence_color = "green" if analysis.confidence >= 70 else "yellow" if analysis.confidence >= 40 else "red"

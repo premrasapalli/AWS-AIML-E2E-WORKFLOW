@@ -3,7 +3,6 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from shared.bedrock_client import BedrockClient
-from shared.config import settings
 from ..models import TerraformChange, SecurityFinding, AIAnalysis, RiskLevel
 
 

@@ -1,5 +1,4 @@
 import subprocess
-import json
 from typing import Optional
 from ..models import PodLog
 

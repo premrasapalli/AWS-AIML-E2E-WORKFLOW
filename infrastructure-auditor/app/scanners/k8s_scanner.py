@@ -1,7 +1,6 @@
 import yaml
 import os
-from typing import Optional
-from ..models import SecurityIssue, RiskLevel, FileType
+from ..models import SecurityIssue, RiskLevel
 
 
 class K8sScanner:
