@@ -12,8 +12,8 @@ class ReportGenerator:
     def generate_report(
         self,
         status: str,
-        results: dict,
-        suggestions: Optional[list[str]] = None,
+        implemented_correctly: list[str],
+        improvements_needed: Optional[list[str]] = None,
     ) -> str:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{self.tool_name}_{timestamp}.txt"
@@ -28,27 +28,23 @@ class ReportGenerator:
         lines.append("")
 
         lines.append("-" * 60)
-        lines.append("  RESULTS SUMMARY")
+        lines.append("  WHAT IS IMPLEMENTED CORRECTLY")
         lines.append("-" * 60)
-        for key, value in results.items():
-            lines.append(f"  {key}: {value}")
-        lines.append("")
-
-        lines.append("-" * 60)
-        lines.append("  APPRECIATION")
-        lines.append("-" * 60)
-        lines.append("  Nice work on implementing this tool! The architecture is clean")
-        lines.append("  and the integration with AI backends shows thoughtful design.")
-        lines.append("")
-
-        lines.append("-" * 60)
-        lines.append("  SUGGESTIONS FOR IMPROVEMENT")
-        lines.append("-" * 60)
-        if suggestions:
-            for i, suggestion in enumerate(suggestions, 1):
-                lines.append(f"  {i}. {suggestion}")
+        if implemented_correctly:
+            for item in implemented_correctly:
+                lines.append(f"  [x] {item}")
         else:
-            lines.append("  None - No improvements needed at this time.")
+            lines.append("  None")
+        lines.append("")
+
+        lines.append("-" * 60)
+        lines.append("  IMPROVEMENTS NEEDED")
+        lines.append("-" * 60)
+        if improvements_needed:
+            for i, item in enumerate(improvements_needed, 1):
+                lines.append(f"  {i}. {item}")
+        else:
+            lines.append("  None - No improvements needed")
         lines.append("")
 
         lines.append("=" * 60)

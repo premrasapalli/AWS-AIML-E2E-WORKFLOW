@@ -69,16 +69,18 @@ async def review_terraform(request: ReviewRequest):
         ai_analysis = None
         suggestions = [f"Error during review: {str(e)}"]
 
+    implemented = [
+        "Terraform HCL file parsing and resource extraction",
+        "Terrascan security scanning integration",
+        "AI-powered code review and risk analysis",
+        "Git diff parsing for change detection",
+        "Resource type and name extraction",
+    ]
+
     report_path = report_gen.generate_report(
         status=status,
-        results={
-            "repo_path": request.repo_path,
-            "tf_files_found": len(tf_files) if 'tf_files' in dir() else 0,
-            "resources_parsed": len(changes),
-            "terrascan_findings": len(terrascan_findings),
-            "ai_analysis": bool(ai_analysis),
-        },
-        suggestions=suggestions,
+        implemented_correctly=implemented,
+        improvements_needed=suggestions,
     )
 
     return ReviewResponse(

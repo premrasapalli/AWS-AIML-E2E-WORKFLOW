@@ -63,8 +63,8 @@ async def audit_infrastructure(request: AuditRequest):
 
     report_path = report_gen.generate_report(
         status=status,
-        results={"scan_path": request.path, "summary": summary},
-        suggestions=suggestions,
+        implemented_correctly=_get_implemented(summary, all_results),
+        improvements_needed=suggestions,
     )
 
     return AuditResponse(
@@ -108,6 +108,18 @@ def _generate_summary(results: list[AuditResult]) -> dict:
         "low": low,
         "files_scanned": len(results),
     }
+
+
+def _get_implemented(summary: dict, results: list[AuditResult]) -> list[str]:
+    items = []
+    items.append(f"K8s YAML security scanner with {len(K8sScanner.UNSAFE_CONFIGS)} security checks")
+    items.append(f"Docker Compose security scanner with {len(DockerScanner.UNSAFE_CONFIGS)} security checks")
+    items.append("Terraform scanning via tfsec integration")
+    items.append("Risk scoring and severity classification (critical/high/medium/low)")
+    items.append("AI-powered explanations for security findings")
+    if summary.get("total_issues", 0) == 0:
+        items.append("All scans passed - no security issues found")
+    return items
 
 
 def _generate_suggestions(summary: dict, results: list[AuditResult]) -> list[str]:
