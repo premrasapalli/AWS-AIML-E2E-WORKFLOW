@@ -2,17 +2,17 @@
 
 ## Overview
 
-GitHub Actions pipeline with 3 stages: CI, Build, Deploy.
+GitHub Actions pipeline with 2 workflows: CI (build and test) and CD (deploy).
 
 ## Triggers
 
 | Event | Pipeline |
 |-------|----------|
-| PR to main | CI (lint + test + security) |
+| PR to main | CI (lint + test + security + reports) |
 | Push to main | CI + Build Docker + Push to ECR |
-| CI passes | Deploy to EKS |
+| CI passes on main | Deploy to EKS + CD Reports |
 
-## Pipeline Jobs
+## CI Pipeline Jobs (ci.yml)
 
 ### 1. Lint
 - Python 3.14
@@ -28,16 +28,38 @@ GitHub Actions pipeline with 3 stages: CI, Build, Deploy.
 - trivy vulnerability scanner
 - bandit security scan
 
-### 4. Build Docker
+### 4. Generate Reports
+- Runs all 3 scanners on the repository
+- Creates per-tool report files:
+  - `infrastructure-auditor_*.txt`
+  - `terraform-review-agent_*.txt`
+  - `k8s-debugger_*.txt`
+  - `CI_SUMMARY.txt`
+- Uploads reports as GitHub artifact (30-day retention)
+
+### 5. Build Docker
 - Build 3 images in parallel
 - Push to ECR with commit SHA tag
 - Tag as latest
 
-### 5. Deploy to EKS
+## CD Pipeline Jobs (deploy.yml)
+
+### 1. Deploy to EKS Fargate
 - Update kubeconfig
-- kubectl apply
-- Rolling update
-- Health check verification
+- kubectl apply for each tool (Deployment + Service)
+- Wait for Fargate startup (60s)
+- Verify rollout status
+
+### 2. Generate Reports
+- Creates CD deployment report
+- Creates infrastructure review report
+- Creates `CD_SUMMARY.txt`
+- Uploads as GitHub artifact
+
+### 3. Verify
+- kubectl get deployments
+- kubectl get services
+- kubectl get pods
 
 ## Required GitHub Secrets
 
@@ -46,9 +68,30 @@ GitHub Actions pipeline with 3 stages: CI, Build, Deploy.
 | AWS_ACCESS_KEY_ID | IAM user access key |
 | AWS_SECRET_ACCESS_KEY | IAM user secret key |
 | AWS_REGION | us-east-1 |
-| AWS_ACCOUNT_ID | 730767193869 |
-| EKS_CLUSTER | aimlops-cluster |
-| ECR_REGISTRY | 730767193869.dkr.ecr.us-east-1.amazonaws.com |
+| AWS_ACCOUNT_ID | AWS account ID |
+| EKS_CLUSTER | aimlops-fargate |
+
+## Downloading Reports
+
+Reports are saved as GitHub artifacts and can be downloaded from any workflow run.
+
+**Steps to download:**
+1. Go to: `https://github.com/premrasapalli/AWS-AIML-E2E-WORKFLOW/actions`
+2. Click on any workflow run
+3. Scroll down to **Artifacts** section
+4. Click the artifact name to download:
+   - `scan-reports-{sha}` (from CI workflow)
+   - `cd-reports-{sha}` (from CD workflow)
+5. Extract the zip file
+
+**Report contents:**
+```
+WHAT IS IMPLEMENTED CORRECTLY
+  - Lists working features in plain English
+
+IMPROVEMENTS NEEDED
+  - Lists suggestions for improvement (or "None")
+```
 
 ## Manual Trigger
 
@@ -69,4 +112,3 @@ gh run watch <run-id>
 # View logs
 gh run view <run-id> --log
 ```
-

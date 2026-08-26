@@ -15,10 +15,10 @@ aws ecr create-repository --repository-name aimlops-k8s-debugger --region us-eas
 - `730767193869.dkr.ecr.us-east-1.amazonaws.com/aimlops-k8s-debugger`
 
 ### 2. EKS Cluster
-- **Name**: aimlops-cluster
+- **Name**: aimlops-fargate
 - **Region**: us-east-1
 - **Version**: 1.31
-- **ARN**: arn:aws:eks:us-east-1:730767193869:cluster/aimlops-cluster
+- **Mode**: Fargate (serverless, no EC2 nodes)
 
 ### 3. VPC Configuration
 - **VPC ID**: vpc-09348b528487de0b4
@@ -86,7 +86,7 @@ streamlit run dashboard.py
 | Resource | Monthly Cost |
 |----------|-------------|
 | EKS Cluster | $73 (control plane) |
-| EC2 Nodes (3x t3.medium) | $100-150 |
+| Fargate (3 tasks) | $100-150 |
 | ECR Storage | $1-5 |
 | ALB | $20-30 |
 | Data Transfer | $5-10 |
@@ -96,7 +96,7 @@ streamlit run dashboard.py
 
 ```bash
 # Delete EKS cluster
-aws eks delete-cluster --name aimlops-cluster --region us-east-1
+aws eks delete-cluster --name aimlops-fargate --region us-east-1
 
 # Delete ECR repos
 aws ecr delete-repository --repository-name aimlops-terraform-review-agent --force

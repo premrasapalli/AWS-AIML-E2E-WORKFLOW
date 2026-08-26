@@ -11,9 +11,8 @@ The AWS-AIML-E2E-WORKFLOW repository contains three AI-powered DevSecOps tools t
 │                        GitHub Repository                        │
 ├─────────────────────────────────────────────────────────────────┤
 │  .github/workflows/                                            │
-│  ├── ci.yml        (Lint, Test, Security Scan)                 │
-│  ├── build.yml     (Docker Build + ECR Push)                   │
-│  └── deploy.yml    (EKS Deployment)                             │
+│  ├── ci.yml        (Lint, Test, Security, Reports, Build)      │
+│  └── deploy.yml    (Deploy to EKS, Reports, Verify)            │
 ├─────────────────────────────────────────────────────────────────┤
 │  .github/docker/                                               │
 │  ├── Dockerfile.terraform-review-agent                         │
@@ -22,26 +21,26 @@ The AWS-AIML-E2E-WORKFLOW repository contains three AI-powered DevSecOps tools t
 │  └── docker-compose.yml                                        │
 └─────────────────────────────────────────────────────────────────┘
                               │
-                              ▼
+                              v
 ┌─────────────────────────────────────────────────────────────────┐
 │                     CI/CD Pipeline                              │
 ├─────────────────────────────────────────────────────────────────┤
-│  PR Created ──► Lint & Test ──► Security Scan ──► Build Docker  │
+│  Lint --> Test --> Security --> Generate Reports --> Build Docker│
 │                                                              │
-│  Merge to main ──► Push to ECR ──► Deploy to EKS              │
+│  Merge to main --> Push to ECR --> Deploy to EKS --> Reports  │
 └─────────────────────────────────────────────────────────────────┘
                               │
-                              ▼
+                              v
 ┌─────────────────────────────────────────────────────────────────┐
 │                     AWS Infrastructure                          │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
-│  │ ECR Repo     │  │ EKS Cluster  │  │ Load Balancer│        │
-│  │ (3 repos)    │  │ (3 nodes)    │  │ (3 services) │        │
+│  │ ECR Repo     │  │ EKS Fargate  │  │ Load Balancer│        │
+│  │ (3 repos)    │  │ (serverless) │  │ (3 services) │        │
 │  └──────────────┘  └──────────────┘  └──────────────┘        │
 └─────────────────────────────────────────────────────────────────┘
                               │
-                              ▼
+                              v
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Application Layer                            │
 ├─────────────────────────────────────────────────────────────────┤
@@ -51,19 +50,38 @@ The AWS-AIML-E2E-WORKFLOW repository contains three AI-powered DevSecOps tools t
 │  └──────────────────┘  └──────────────────┘  └──────────────┘│
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌──────────────────────────────────────────────────────────┐  │
-│  │ Shared Library (bedrock_client.py, config.py)           │  │
+│  │ Shared Library (bedrock_client.py, config.py,            │  │
+│  │                 report_generator.py)                     │  │
 │  └──────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
                               │
-                              ▼
+                              v
 ┌─────────────────────────────────────────────────────────────────┐
-│                     AI Layer (Ollama)                           │
+│                     AI Layer                                    │
 ├─────────────────────────────────────────────────────────────────┤
-│  Local LLM Server (localhost:11434)                            │
+│  Option A: Ollama (free, local)                                │
 │  ├── qwen3:0.6b (default, fastest)                            │
 │  ├── deepseek-r1:7b (best reasoning)                          │
 │  ├── llama3.2:1b                                               │
 │  └── mistral                                                   │
+│                                                                │
+│  Option B: AWS Bedrock (paid, cloud)                           │
+│  ├── Amazon Titan models                                       │
+│  └── Amazon Nova models                                        │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              v
+┌─────────────────────────────────────────────────────────────────┐
+│                     Reports Layer                               │
+├─────────────────────────────────────────────────────────────────┤
+│  Reports generated at runtime and in CI/CD pipelines           │
+│  ├── infrastructure-auditor_YYYYMMDD_HHMMSS.txt                │
+│  ├── terraform-review-agent_YYYYMMDD_HHMMSS.txt                │
+│  ├── k8s-debugger_YYYYMMDD_HHMMSS.txt                         │
+│  ├── CI_SUMMARY.txt                                            │
+│  └── CD_SUMMARY.txt                                            │
+│                                                                │
+│  Download from: Actions --> Artifacts                          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -90,15 +108,19 @@ The AWS-AIML-E2E-WORKFLOW repository contains three AI-powered DevSecOps tools t
 ## Data Flow
 
 ```
-User Input ──► CLI/API ──► Scanner ──► Findings ──► AI Analysis ──► Output
+User Input --> CLI/API --> Scanner --> Findings --> AI Analysis --> Output
      │                         │              │              │
-     │                         ▼              ▼              ▼
+     │                         v              v              v
      │                    Terrascan      Risk Score     Remediation
      │                    tfsec          Compliance     Explanation
      │                    K8s Scanner    Severity       Fix Suggestions
      │                    Docker Scanner
      │
-     └──► Streamlit Dashboard ──► Real-time Results
+     └──> Streamlit Dashboard --> Real-time Results
+                                         │
+                                         v
+                                  Report Generator
+                                  (saves .txt files)
 ```
 
 ## Network Architecture
@@ -106,15 +128,15 @@ User Input ──► CLI/API ──► Scanner ──► Findings ──► AI A
 ```
 Internet
     │
-    ▼
+    v
 ┌─────────────┐
 │ ALB (AWS)   │
 │ Port 80/443 │
 └─────────────┘
     │
-    ▼
+    v
 ┌─────────────────────────────────────────────┐
-│ EKS Cluster (aimlops-cluster)               │
+│ EKS Cluster (aimlops-fargate)               │
 │ VPC: 10.0.0.0/16                            │
 │ Subnets: us-east-1a, 1b, 1c                │
 ├─────────────────────────────────────────────┤
@@ -127,7 +149,7 @@ Internet
 │      └── Service: LoadBalancer :8003        │
 └─────────────────────────────────────────────┘
     │
-    ▼
+    v
 ┌─────────────────────────────────────────────┐
 │ ECR Repositories                            │
 │ ├── aimlops-terraform-review-agent          │

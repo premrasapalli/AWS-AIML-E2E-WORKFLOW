@@ -102,3 +102,26 @@ aws eks delete-cluster --name aimlops-cluster --region us-east-1
 - GitHub Issues: https://github.com/premrasapalli/AWS-AIML-E2E-WORKFLOW/issues
 - AWS EKS Docs: https://docs.aws.amazon.com/eks/
 - Ollama Docs: https://ollama.com/docs
+
+## Report Generation Issues
+
+### Reports Not Generated in CI
+```bash
+# Check if generate-reports job ran
+gh run view <run-id> --log | grep "generate-reports"
+
+# Check if reports directory exists
+ls -la reports/
+
+# Verify report_generator.py imports work
+python -c "from shared.report_generator import ReportGenerator; print('OK')"
+```
+
+### Cannot Download Report Artifacts
+```bash
+# List artifacts for a workflow run
+gh api repos/premrasapalli/AWS-AIML-E2E-WORKFLOW/actions/runs/<run-id>/artifacts
+
+# Download artifact locally
+gh run download <run-id> -n scan-reports-<sha>
+```
