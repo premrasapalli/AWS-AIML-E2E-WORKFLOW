@@ -1,4 +1,4 @@
-name: Deploy to EKS
+name: Deploy to EKS (Fargate)
 
 on:
   workflow_run:
@@ -9,7 +9,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  EKS_CLUSTER: aimlops-cluster
+  EKS_CLUSTER: aimlops-fargate
 
 jobs:
   deploy:
@@ -20,13 +20,10 @@ jobs:
         project:
           - name: terraform-review-agent
             port: "8001"
-            replicas: "2"
           - name: infrastructure-auditor
             port: "8002"
-            replicas: "2"
           - name: k8s-debugger
             port: "8003"
-            replicas: "2"
     steps:
       - uses: actions/checkout@v4
 
@@ -40,11 +37,10 @@ jobs:
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER }} --region ${{ env.AWS_REGION }}
 
-      - name: Deploy to EKS
+      - name: Deploy to Fargate
         env:
           PROJECT: ${{ matrix.project.name }}
           PORT: ${{ matrix.project.port }}
-          REPLICAS: ${{ matrix.project.replicas }}
           IMAGE_TAG: ${{ github.sha }}
           ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
         run: |
@@ -56,7 +52,7 @@ jobs:
             labels:
               app: ${PROJECT}
           spec:
-            replicas: ${REPLICAS}
+            replicas: 1
             selector:
               matchLabels:
                 app: ${PROJECT}
@@ -72,23 +68,23 @@ jobs:
                   - containerPort: ${PORT}
                   resources:
                     requests:
-                      memory: "256Mi"
-                      cpu: "250m"
-                    limits:
                       memory: "512Mi"
                       cpu: "500m"
+                    limits:
+                      memory: "1Gi"
+                      cpu: "1024m"
                   readinessProbe:
                     httpGet:
                       path: /health
                       port: ${PORT}
-                    initialDelaySeconds: 10
-                    periodSeconds: 5
+                    initialDelaySeconds: 30
+                    periodSeconds: 10
                   livenessProbe:
                     httpGet:
                       path: /health
                       port: ${PORT}
-                    initialDelaySeconds: 15
-                    periodSeconds: 10
+                    initialDelaySeconds: 45
+                    periodSeconds: 15
           ---
           apiVersion: v1
           kind: Service
@@ -103,9 +99,12 @@ jobs:
               targetPort: ${PORT}
           EOF
 
+      - name: Wait for Fargate startup
+        run: sleep 60
+
       - name: Verify deployment
         run: |
-          kubectl rollout status deployment/${{ matrix.project.name }} --timeout=120s
+          kubectl rollout status deployment/${{ matrix.project.name }} --timeout=180s
           echo "Deployed: ${{ matrix.project.name }}"
 
   verify:
