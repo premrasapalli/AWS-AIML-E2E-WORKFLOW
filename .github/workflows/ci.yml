@@ -121,7 +121,7 @@ jobs:
 
           implemented = [
               'K8s YAML security scanner with ' + str(len(K8sScanner.UNSAFE_CONFIGS)) + ' security checks',
-              'Docker Compose security scanner with ' + str(len(DockerScanner.UNSAFE_CONFIGS)) + ' security checks',
+              'Docker Compose security scanner with ' + str(len(DockerScanner.UNSAFE_PRACTICES)) + ' security checks',
               'Terraform scanning via tfsec integration',
               'Risk scoring and severity classification',
               'AI-powered explanations for security findings',
