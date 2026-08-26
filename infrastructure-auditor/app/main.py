@@ -9,6 +9,7 @@ from .scanners.k8s_scanner import K8sScanner
 from .scanners.docker_scanner import DockerScanner
 from .scanners.terraform_scanner import TerraformScanner
 from .ai.bedrock_explainer import BedrockExplainer
+from shared.report_generator import ReportGenerator
 
 app = FastAPI(title="AI Infrastructure Auditor", version="1.0.0")
 
@@ -23,6 +24,7 @@ app.add_middleware(
 k8s_scanner = K8sScanner()
 docker_scanner = DockerScanner()
 terraform_scanner = TerraformScanner()
+report_gen = ReportGenerator("infrastructure-auditor")
 
 
 @app.get("/health")
@@ -35,22 +37,35 @@ async def audit_infrastructure(request: AuditRequest):
     all_results = []
     explainer = BedrockExplainer(model_alias=request.model_alias) if request.include_ai_explanations else None
 
-    if request.file_type == FileType.KUBERNETES or request.file_type is None:
-        issues = k8s_scanner.scan_directory(request.path)
-        if issues:
-            all_results.append(_create_result(request.path, FileType.KUBERNETES, issues, explainer))
+    try:
+        if request.file_type == FileType.KUBERNETES or request.file_type is None:
+            issues = k8s_scanner.scan_directory(request.path)
+            if issues:
+                all_results.append(_create_result(request.path, FileType.KUBERNETES, issues, explainer))
 
-    if request.file_type == FileType.DOCKER_COMPOSE or request.file_type is None:
-        issues = docker_scanner.scan_directory(request.path)
-        if issues:
-            all_results.append(_create_result(request.path, FileType.DOCKER_COMPOSE, issues, explainer))
+        if request.file_type == FileType.DOCKER_COMPOSE or request.file_type is None:
+            issues = docker_scanner.scan_directory(request.path)
+            if issues:
+                all_results.append(_create_result(request.path, FileType.DOCKER_COMPOSE, issues, explainer))
 
-    if request.file_type == FileType.TERRAFORM or request.file_type is None:
-        issues = terraform_scanner.scan_directory(request.path)
-        if issues:
-            all_results.append(_create_result(request.path, FileType.TERRAFORM, issues, explainer))
+        if request.file_type == FileType.TERRAFORM or request.file_type is None:
+            issues = terraform_scanner.scan_directory(request.path)
+            if issues:
+                all_results.append(_create_result(request.path, FileType.TERRAFORM, issues, explainer))
 
-    summary = _generate_summary(all_results)
+        summary = _generate_summary(all_results)
+        status = "success"
+        suggestions = _generate_suggestions(summary, all_results)
+    except Exception as e:
+        summary = {"error": str(e)}
+        status = "failed"
+        suggestions = ["Fix the underlying error before running again"]
+
+    report_path = report_gen.generate_report(
+        status=status,
+        results={"scan_path": request.path, "summary": summary},
+        suggestions=suggestions,
+    )
 
     return AuditResponse(
         results=all_results,
@@ -93,6 +108,25 @@ def _generate_summary(results: list[AuditResult]) -> dict:
         "low": low,
         "files_scanned": len(results),
     }
+
+
+def _generate_suggestions(summary: dict, results: list[AuditResult]) -> list[str]:
+    suggestions = []
+    if summary.get("total_issues", 0) == 0:
+        return suggestions
+    if summary.get("critical", 0) > 0:
+        suggestions.append("Address critical security issues immediately - they pose severe risk")
+    if summary.get("high", 0) > 0:
+        suggestions.append("Review high-severity issues before deploying to production")
+    if summary.get("medium", 0) > 0:
+        suggestions.append("Plan to fix medium-severity issues in upcoming sprints")
+    for result in results:
+        for issue in result.issues:
+            if hasattr(issue, "remediation") and issue.remediation:
+                suggestions.append(f"[{issue.severity.value}] {issue.remediation}")
+                if len(suggestions) >= 10:
+                    return suggestions
+    return suggestions
 
 
 @app.get("/scanners")

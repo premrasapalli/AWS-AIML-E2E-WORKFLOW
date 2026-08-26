@@ -11,6 +11,7 @@ from .models import DebugRequest, DebugResponse, PodPhase, ContainerStatus
 from .collectors.log_collector import LogCollector
 from .collectors.event_collector import EventCollector
 from .ai.bedrock_diagnoser import BedrockDiagnoser
+from shared.report_generator import ReportGenerator
 
 app = FastAPI(title="AI-Powered K8s Pod Debugger", version="1.0.0")
 
@@ -24,6 +25,7 @@ app.add_middleware(
 
 log_collector = LogCollector()
 event_collector = EventCollector()
+report_gen = ReportGenerator("k8s-debugger")
 
 
 @app.get("/health")
@@ -63,6 +65,32 @@ async def debug_pod(request: DebugRequest):
             )
         except Exception as e:
             pass
+
+    status = "success"
+    suggestions = []
+    if pod_info["phase"] not in ["Running", "Succeeded"]:
+        suggestions.append(f"Pod is in {pod_info['phase']} state - investigate underlying issue")
+    for cs in pod_info["container_statuses"]:
+        if cs.restart_count > 3:
+            suggestions.append(f"Container {cs.name} has {cs.restart_count} restarts - check for crashes")
+        if not cs.ready:
+            suggestions.append(f"Container {cs.name} is not ready - verify health checks")
+    if not events:
+        suggestions.append("No events found - ensure cluster is accessible")
+
+    report_path = report_gen.generate_report(
+        status=status,
+        results={
+            "pod_name": pod_name,
+            "namespace": request.namespace,
+            "phase": pod_info["phase"],
+            "containers": len(pod_info["container_statuses"]),
+            "events": len(events),
+            "has_logs": bool(logs),
+            "ai_analysis": bool(analysis),
+        },
+        suggestions=suggestions,
+    )
 
     return DebugResponse(
         namespace=request.namespace,

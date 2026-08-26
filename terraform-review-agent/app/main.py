@@ -8,6 +8,7 @@ from .models import ReviewRequest, ReviewResponse
 from .agents.terraform_parser import TerraformParser
 from .agents.terrascan_scanner import TerrascanScanner
 from .agents.bedrock_analyzer import BedrockAnalyzer
+from shared.report_generator import ReportGenerator
 
 app = FastAPI(title="AI Terraform Review Agent", version="1.0.0")
 
@@ -21,6 +22,7 @@ app.add_middleware(
 
 parser = TerraformParser()
 scanner = TerrascanScanner()
+report_gen = ReportGenerator("terraform-review-agent")
 
 
 @app.get("/health")
@@ -30,25 +32,54 @@ async def health():
 
 @app.post("/review", response_model=ReviewResponse)
 async def review_terraform(request: ReviewRequest):
-    tf_files = parser.get_terraform_files(request.repo_path)
-    changes = []
-    for tf_file in tf_files:
-        resources = parser.parse_hcl(tf_file)
-        for key, resource in resources.items():
-            from .models import TerraformChange
-            changes.append(
-                TerraformChange(
-                    file=tf_file,
-                    resource_type=resource["type"],
-                    resource_name=resource["name"],
-                    change_type="existing",
+    try:
+        tf_files = parser.get_terraform_files(request.repo_path)
+        changes = []
+        for tf_file in tf_files:
+            resources = parser.parse_hcl(tf_file)
+            for key, resource in resources.items():
+                from .models import TerraformChange
+                changes.append(
+                    TerraformChange(
+                        file=tf_file,
+                        resource_type=resource["type"],
+                        resource_name=resource["name"],
+                        change_type="existing",
+                    )
                 )
-            )
 
-    terrascan_findings = scanner.scan(request.repo_path)
+        terrascan_findings = scanner.scan(request.repo_path)
 
-    analyzer = BedrockAnalyzer(model_alias=request.model_alias)
-    ai_analysis = analyzer.analyze_changes(changes, terrascan_findings)
+        analyzer = BedrockAnalyzer(model_alias=request.model_alias)
+        ai_analysis = analyzer.analyze_changes(changes, terrascan_findings)
+
+        status = "success"
+        suggestions = []
+        if not tf_files:
+            suggestions.append("No .tf files found - verify the repo_path is correct")
+        if terrascan_findings:
+            suggestions.append(f"Found {len(terrascan_findings)} security findings from Terrascan")
+        for finding in terrascan_findings[:5]:
+            if hasattr(finding, "severity") and finding.severity in ["HIGH", "CRITICAL"]:
+                suggestions.append(f"Address {finding.severity} severity finding: {finding.rule_id}")
+    except Exception as e:
+        status = "failed"
+        changes = []
+        terrascan_findings = []
+        ai_analysis = None
+        suggestions = [f"Error during review: {str(e)}"]
+
+    report_path = report_gen.generate_report(
+        status=status,
+        results={
+            "repo_path": request.repo_path,
+            "tf_files_found": len(tf_files) if 'tf_files' in dir() else 0,
+            "resources_parsed": len(changes),
+            "terrascan_findings": len(terrascan_findings),
+            "ai_analysis": bool(ai_analysis),
+        },
+        suggestions=suggestions,
+    )
 
     return ReviewResponse(
         changes=changes,

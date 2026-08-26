@@ -82,9 +82,159 @@ jobs:
           pip install bandit
           bandit -r shared/ terraform-review-agent/app/ infrastructure-auditor/app/ k8s-debugger/app/ -ll || true
 
+  generate-reports:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml fastapi uvicorn httpx pydantic pydantic-settings
+          pip install -r shared/requirements.txt 2>/dev/null || true
+          pip install -r terraform-review-agent/requirements.txt
+          pip install -r infrastructure-auditor/requirements.txt
+          pip install -r k8s-debugger/requirements.txt
+
+      - name: Run Infrastructure Auditor scan
+        run: |
+          cd infrastructure-auditor
+          python -c "
+          import sys, os
+          sys.path.insert(0, '..')
+          from app.scanners.k8s_scanner import K8sScanner
+          from app.scanners.docker_scanner import DockerScanner
+          from shared.report_generator import ReportGenerator
+
+          k8s = K8sScanner()
+          docker = DockerScanner()
+          gen = ReportGenerator('infrastructure-auditor', output_dir='../reports')
+
+          k8s_issues = k8s.scan_directory('..')
+          docker_issues = docker.scan_directory('..')
+
+          all_issues = k8s_issues + docker_issues
+          suggestions = []
+          if k8s_issues:
+              suggestions.append(f'Found {len(k8s_issues)} Kubernetes security issues')
+          if docker_issues:
+              suggestions.append(f'Found {len(docker_issues)} Docker security issues')
+          for issue in all_issues[:10]:
+              if hasattr(issue, 'remediation') and issue.remediation:
+                  suggestions.append(f'[{issue.severity.value}] {issue.remediation}')
+
+          gen.generate_report(
+              status='success',
+              results={'k8s_issues': len(k8s_issues), 'docker_issues': len(docker_issues), 'total': len(all_issues)},
+              suggestions=suggestions[:15]
+          )
+          print('Infrastructure Auditor report generated')
+          "
+
+      - name: Run Terraform Review Agent scan
+        run: |
+          cd terraform-review-agent
+          python -c "
+          import sys, os
+          sys.path.insert(0, '..')
+          from app.agents.terraform_parser import TerraformParser
+          from app.agents.terrascan_scanner import TerrascanScanner
+          from shared.report_generator import ReportGenerator
+
+          parser = TerraformParser()
+          scanner = TerrascanScanner()
+          gen = ReportGenerator('terraform-review-agent', output_dir='../reports')
+
+          tf_files = parser.get_terraform_files('..')
+          resources = {}
+          for f in tf_files:
+              resources.update(parser.parse_hcl(f))
+
+          findings = scanner.scan('..')
+          suggestions = []
+          if not tf_files:
+              suggestions.append('No Terraform files found to review')
+          if findings:
+              suggestions.append(f'Found {len(findings)} Terrascan security findings')
+
+          gen.generate_report(
+              status='success',
+              results={'tf_files': len(tf_files), 'resources': len(resources), 'findings': len(findings)},
+              suggestions=suggestions[:15]
+          )
+          print('Terraform Review Agent report generated')
+          "
+
+      - name: Run K8s Debugger scan
+        run: |
+          cd k8s-debugger
+          python -c "
+          import sys, os
+          sys.path.insert(0, '..')
+          from shared.report_generator import ReportGenerator
+
+          gen = ReportGenerator('k8s-debugger', output_dir='../reports')
+          suggestions = []
+          suggestions.append('K8s Debugger requires a live cluster - skipped in CI')
+          suggestions.append('Run locally with: kubectl config use-context <cluster>')
+
+          gen.generate_report(
+              status='skipped',
+              results={'reason': 'No live cluster in CI environment'},
+              suggestions=suggestions
+          )
+          print('K8s Debugger report generated')
+          "
+
+      - name: Generate CI summary report
+        run: |
+          python -c "
+          import os
+          import glob
+          from datetime import datetime
+
+          report_files = sorted(glob.glob('reports/*.txt'))
+
+          lines = []
+          lines.append('=' * 60)
+          lines.append('  CI/CD PIPELINE REPORT SUMMARY')
+          lines.append('=' * 60)
+          lines.append(f'Generated: {datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")}')
+          lines.append(f'Branch: main')
+          lines.append(f'Commit: {os.environ.get(\"GITHUB_SHA\", \"unknown\")[:8]}')
+          lines.append('')
+
+          for rf in report_files:
+              with open(rf) as f:
+                  lines.append(f'--- {os.path.basename(rf)} ---')
+                  lines.extend(f.readlines())
+                  lines.append('')
+
+          lines.append('=' * 60)
+          lines.append('  ALL TOOL REPORTS INCLUDED BELOW')
+          lines.append('=' * 60)
+
+          with open('reports/CI_SUMMARY.txt', 'w') as f:
+              f.write('\n'.join(lines))
+
+          print('Summary report created: reports/CI_SUMMARY.txt')
+          "
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: scan-reports-${{ github.sha }}
+          path: reports/
+          retention-days: 30
+
   build-docker:
     runs-on: ubuntu-latest
-    needs: [test, security]
+    needs: [test, security, generate-reports]
     if: github.ref == 'refs/heads/main'
     strategy:
       matrix:
