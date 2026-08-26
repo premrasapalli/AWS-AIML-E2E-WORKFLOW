@@ -136,20 +136,20 @@ jobs:
           gen = ReportGenerator('cd-deployment', output_dir='reports')
 
           implemented = [
-              'EKS Fargate serverless deployment - no EC2 nodes needed',
-              'LoadBalancer service for each tool (ports 8001, 8002, 8003)',
-              'Readiness and liveness probes configured',
-              'Resource limits set (512Mi-1Gi memory, 500m-1024m CPU)',
-              'Automatic rollback on deployment failure',
-              'Container image versioning with Git SHA tags',
+              'EKS Fargate is being used for serverless deployment so there are no EC2 nodes to manage',
+              'Each tool gets its own LoadBalancer service on ports 8001, 8002, and 8003',
+              'Readiness and liveness probes are configured to detect unhealthy pods',
+              'Resource limits are set to prevent pods from consuming too much memory or CPU',
+              'Automatic rollback happens if a deployment fails',
+              'Container images are versioned with Git SHA tags for easy identification',
           ]
 
           improvements = [
-              'Consider adding HPA (Horizontal Pod Autoscaler) for scaling',
-              'Add Network Policies for inter-service communication',
-              'Consider using Ingress with TLS for production',
-              'Add Pod Disruption Budgets for high availability',
-              'Monitor resource usage and adjust limits as needed',
+              'Consider adding Horizontal Pod Autoscaler (HPA) to automatically scale based on traffic',
+              'Add Network Policies to control which services can communicate with each other',
+              'Consider using Ingress with TLS certificates for production traffic',
+              'Add Pod Disruption Budgets to ensure high availability during maintenance',
+              'Monitor resource usage over time and adjust limits as needed',
           ]
 
           gen.generate_report(
@@ -170,20 +170,20 @@ jobs:
           gen = ReportGenerator('infrastructure-review', output_dir='reports')
 
           implemented = [
-              'Terraform EKS cluster with Fargate profile',
-              'VPC with public/private subnets',
-              'NAT Gateway for private subnet internet access',
-              'ECR repositories for container images',
-              'GitHub Actions CI/CD pipeline',
-              'Automated testing and security scanning',
+              'Terraform EKS cluster is configured with Fargate profile for serverless containers',
+              'VPC is set up with public and private subnets for network isolation',
+              'NAT Gateway provides internet access for resources in private subnets',
+              'ECR repositories store container images for the three tools',
+              'GitHub Actions CI/CD pipeline automates testing and deployment',
+              'Automated testing and security scanning run on every code change',
           ]
 
           improvements = [
-              'Add Terraform state backend (S3 + DynamoDB)',
-              'Implement module structure for reusability',
-              'Add terraform plan/apply approval gates',
-              'Consider using Terragrunt for multi-env management',
-              'Add cost estimation with infracost',
+              'Add Terraform state backend using S3 and DynamoDB for state management',
+              'Implement Terraform module structure for better code reusability',
+              'Add terraform plan and apply approval gates for safer deployments',
+              'Consider using Terragrunt for managing multiple environments',
+              'Add cost estimation with infracost to track infrastructure spending',
           ]
 
           gen.generate_report(

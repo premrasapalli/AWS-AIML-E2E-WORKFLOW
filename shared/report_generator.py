@@ -32,7 +32,7 @@ class ReportGenerator:
         lines.append("-" * 60)
         if implemented_correctly:
             for item in implemented_correctly:
-                lines.append(f"  [x] {item}")
+                lines.append(f"  - {item}")
         else:
             lines.append("  None")
         lines.append("")

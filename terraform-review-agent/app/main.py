@@ -70,11 +70,11 @@ async def review_terraform(request: ReviewRequest):
         suggestions = [f"Error during review: {str(e)}"]
 
     implemented = [
-        "Terraform HCL file parsing and resource extraction",
-        "Terrascan security scanning integration",
-        "AI-powered code review and risk analysis",
-        "Git diff parsing for change detection",
-        "Resource type and name extraction",
+        "The Terraform parser can read HCL files and extract resource definitions",
+        "Terrascan integration provides security scanning for infrastructure code",
+        "AI-powered code review analyzes changes and identifies potential risks",
+        "Git diff parsing detects what changed between commits",
+        "Resource type and name extraction helps understand infrastructure components",
     ]
 
     report_path = report_gen.generate_report(

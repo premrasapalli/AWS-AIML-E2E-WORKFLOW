@@ -79,12 +79,12 @@ async def debug_pod(request: DebugRequest):
         suggestions.append("No events found - ensure cluster is accessible")
 
     implemented = [
-        "Pod status detection and phase tracking",
-        "Container readiness and restart monitoring",
-        "Event collection from Kubernetes API",
-        "Log collection with configurable tail lines",
-        "AI-powered root cause analysis",
-        "Label selector support for pod discovery",
+        "The debugger can detect pod status and track which phase the pod is in (Running, Pending, Failed, etc.)",
+        "Container readiness and restart counts are monitored to identify unstable containers",
+        "Kubernetes events are collected to see what happened to the pod",
+        "Logs are collected with configurable tail lines for debugging",
+        "AI-powered root cause analysis helps identify why a pod is failing",
+        "Label selectors allow finding pods without knowing their exact names",
     ]
 
     report_path = report_gen.generate_report(

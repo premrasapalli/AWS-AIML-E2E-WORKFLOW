@@ -112,13 +112,13 @@ def _generate_summary(results: list[AuditResult]) -> dict:
 
 def _get_implemented(summary: dict, results: list[AuditResult]) -> list[str]:
     items = []
-    items.append(f"K8s YAML security scanner with {len(K8sScanner.UNSAFE_CONFIGS)} security checks")
-    items.append(f"Docker Compose security scanner with {len(DockerScanner.UNSAFE_CONFIGS)} security checks")
-    items.append("Terraform scanning via tfsec integration")
-    items.append("Risk scoring and severity classification (critical/high/medium/low)")
-    items.append("AI-powered explanations for security findings")
+    items.append("The Kubernetes YAML scanner is working and can detect 6 types of security misconfigurations")
+    items.append("The Docker Compose scanner is working and can detect 7 types of insecure practices")
+    items.append("Terraform scanning is integrated with tfsec for infrastructure security checks")
+    items.append("Risk scoring system classifies issues by severity level (critical, high, medium, low)")
+    items.append("AI-powered explanations help understand why each finding matters")
     if summary.get("total_issues", 0) == 0:
-        items.append("All scans passed - no security issues found")
+        items.append("All scans passed with no security issues found in the scanned files")
     return items
 
 

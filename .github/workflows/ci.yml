@@ -120,23 +120,23 @@ jobs:
           all_issues = k8s_issues + docker_issues
 
           implemented = [
-              'K8s YAML security scanner with ' + str(len(K8sScanner.UNSAFE_CONFIGS)) + ' security checks',
-              'Docker Compose security scanner with ' + str(len(DockerScanner.UNSAFE_PRACTICES)) + ' security checks',
-              'Terraform scanning via tfsec integration',
-              'Risk scoring and severity classification',
-              'AI-powered explanations for security findings',
+              'The Kubernetes YAML scanner is working and can detect 6 types of security misconfigurations',
+              'The Docker Compose scanner is working and can detect 7 types of insecure practices',
+              'Terraform scanning is integrated with tfsec for infrastructure security checks',
+              'Risk scoring system classifies issues by severity level (critical, high, medium, low)',
+              'AI-powered explanations help understand why each finding matters',
           ]
           if len(all_issues) == 0:
-              implemented.append('All scans passed - no security issues found')
+              implemented.append('All scans passed with no security issues found in the scanned files')
 
           improvements = []
           if k8s_issues:
-              improvements.append('Found ' + str(len(k8s_issues)) + ' Kubernetes security issues to fix')
+              improvements.append('Found ' + str(len(k8s_issues)) + ' Kubernetes security issues that need to be fixed')
           if docker_issues:
-              improvements.append('Found ' + str(len(docker_issues)) + ' Docker security issues to fix')
+              improvements.append('Found ' + str(len(docker_issues)) + ' Docker security issues that need to be fixed')
           for issue in all_issues[:10]:
               if hasattr(issue, 'remediation') and issue.remediation:
-                  improvements.append('[' + issue.severity.value + '] ' + issue.remediation)
+                  improvements.append(issue.remediation)
 
           gen.generate_report(
               status='success',
@@ -167,20 +167,20 @@ jobs:
           findings = scanner.scan('..')
 
           implemented = [
-              'Terraform HCL file parsing and resource extraction',
-              'Terrascan security scanning integration',
-              'AI-powered code review and risk analysis',
-              'Git diff parsing for change detection',
-              'Resource type and name extraction',
+              'The Terraform parser can read HCL files and extract resource definitions',
+              'Terrascan integration provides security scanning for infrastructure code',
+              'AI-powered code review analyzes changes and identifies potential risks',
+              'Git diff parsing detects what changed between commits',
+              'Resource type and name extraction helps understand infrastructure components',
           ]
           if len(findings) == 0:
               implemented.append('No security issues found in Terraform files')
 
           improvements = []
           if not tf_files:
-              improvements.append('No Terraform files found to review')
+              improvements.append('No Terraform files were found to review in the repository')
           if findings:
-              improvements.append('Found ' + str(len(findings)) + ' Terrascan security findings to address')
+              improvements.append('Found ' + str(len(findings)) + ' security findings from Terrascan that need attention')
 
           gen.generate_report(
               status='success',
@@ -201,17 +201,17 @@ jobs:
           gen = ReportGenerator('k8s-debugger', output_dir='../reports')
 
           implemented = [
-              'Pod status detection and phase tracking',
-              'Container readiness and restart monitoring',
-              'Event collection from Kubernetes API',
-              'Log collection with configurable tail lines',
-              'AI-powered root cause analysis',
-              'Label selector support for pod discovery',
+              'The debugger can detect pod status and track which phase the pod is in (Running, Pending, Failed, etc.)',
+              'Container readiness and restart counts are monitored to identify unstable containers',
+              'Kubernetes events are collected to see what happened to the pod',
+              'Logs are collected with configurable tail lines for debugging',
+              'AI-powered root cause analysis helps identify why a pod is failing',
+              'Label selectors allow finding pods without knowing their exact names',
           ]
 
           improvements = [
-              'Skipped in CI - requires a live Kubernetes cluster',
-              'Run locally with: kubectl config use-context <cluster>',
+              'This tool was skipped in CI because it requires a live Kubernetes cluster to run',
+              'To test this tool, run it locally with: kubectl config use-context <your-cluster>',
           ]
 
           gen.generate_report(
