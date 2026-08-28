@@ -281,12 +281,12 @@ aws eks update-kubeconfig --name aimlops-cluster --region us-east-1
 ## Step 10: Add GitHub Secrets
 
 ```bash
-gh secret set AWS_ACCESS_KEY_ID --body "AKIA..."
-gh secret set AWS_SECRET_ACCESS_KEY --body "R0n3..."
+gh secret set AWS_ACCESS_KEY_ID --body "<YOUR-AWS-ACCESS-KEY-ID>"
+gh secret set AWS_SECRET_ACCESS_KEY --body "<YOUR-AWS-SECRET-ACCESS-KEY>"
 gh secret set AWS_REGION --body "us-east-1"
-gh secret set AWS_ACCOUNT_ID --body "730767193869"
+gh secret set AWS_ACCOUNT_ID --body "<YOUR-AWS-ACCOUNT-ID>"
 gh secret set EKS_CLUSTER --body "aimlops-cluster"
-gh secret set ECR_REGISTRY --body "730767193869.dkr.ecr.us-east-1.amazonaws.com"
+gh secret set ECR_REGISTRY --body "<YOUR-AWS-ACCOUNT-ID>.dkr.ecr.us-east-1.amazonaws.com"
 ```
 
 ## Step 11: Deploy to EKS

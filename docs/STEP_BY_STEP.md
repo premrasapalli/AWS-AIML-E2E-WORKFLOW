@@ -93,7 +93,7 @@ curl http://localhost:8003/health
 ```bash
 aws configure
 # Enter credentials:
-# AWS Access Key ID: AKIAXXXXXXXXXXXXXXXX
+# AWS Access Key ID: <YOUR-AWS-ACCESS-KEY-ID>
 # AWS Secret Access Key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 # Default region: us-east-1
 ```
@@ -141,12 +141,12 @@ aws eks create-cluster --cli-input-json '{
 
 ### 5.1 Add GitHub Secrets
 ```bash
-gh secret set AWS_ACCESS_KEY_ID --body "AKIAXXXXXXXXXXXXXXXX"
-gh secret set AWS_SECRET_ACCESS_KEY --body "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+gh secret set AWS_ACCESS_KEY_ID --body "<YOUR-AWS-ACCESS-KEY-ID>"
+gh secret set AWS_SECRET_ACCESS_KEY --body "<YOUR-AWS-SECRET-ACCESS-KEY>"
 gh secret set AWS_REGION --body "us-east-1"
-gh secret set AWS_ACCOUNT_ID --body "730767193869"
+gh secret set AWS_ACCOUNT_ID --body "<YOUR-AWS-ACCOUNT-ID>"
 gh secret set EKS_CLUSTER --body "aimlops-cluster"
-gh secret set ECR_REGISTRY --body "730767193869.dkr.ecr.us-east-1.amazonaws.com"
+gh secret set ECR_REGISTRY --body "<YOUR-AWS-ACCOUNT-ID>.dkr.ecr.us-east-1.amazonaws.com"
 ```
 
 ### 5.2 Push Code to Trigger Pipeline
